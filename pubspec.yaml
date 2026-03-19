@@ -1,0 +1,28 @@
+name: pe_prm392
+description: "E-Commerce UI Implementation App"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  http: ^1.2.1
+  cached_network_image: ^3.3.1
+  google_fonts: ^6.1.0
+  flutter_riverpod: ^2.5.1
+  shimmer: ^3.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  integration_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
