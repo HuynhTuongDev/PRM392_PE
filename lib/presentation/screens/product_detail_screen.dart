@@ -159,18 +159,39 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: recs.length,
-                  itemBuilder: (context, i) => Container(
-                    width: 140,
-                    margin: const EdgeInsets.only(right: 16),
-                    decoration: BoxDecoration(color: AppTheme.slate800, borderRadius: BorderRadius.circular(16)),
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
-                      children: [
-                        Expanded(child: CachedNetworkImage(imageUrl: recs[i].thumbnail, fit: BoxFit.cover, width: double.infinity)),
-                        Padding(padding: const EdgeInsets.all(8), child: Text(recs[i].title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
-                      ],
-                    ),
-                  ),
+                  itemBuilder: (context, i) {
+                    final item = recs[i];
+                    final matchScore = ref.watch(aiMatchScoreProvider((widget.product, item)));
+                    
+                    return GestureDetector(
+                      onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => ProductDetailScreen(product: item))),
+                      child: Container(
+                        width: 140,
+                        margin: const EdgeInsets.only(right: 16),
+                        decoration: BoxDecoration(color: AppTheme.slate800, borderRadius: BorderRadius.circular(16)),
+                        clipBehavior: Clip.antiAlias,
+                        child: Column(
+                          children: [
+                            Expanded(child: CachedNetworkImage(imageUrl: item.thumbnail, fit: BoxFit.cover, width: double.infinity)),
+                            Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Column(
+                                children: [
+                                  Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(color: AppTheme.primary.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
+                                    child: Text('Match $matchScore%', style: const TextStyle(fontSize: 10, color: AppTheme.primary, fontWeight: FontWeight.bold)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],

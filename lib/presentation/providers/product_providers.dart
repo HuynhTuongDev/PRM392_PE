@@ -205,35 +205,55 @@ final cartItemCountProvider = Provider<int>((ref) {
   return cart.fold(0, (sum, item) => sum + item.quantity);
 });
 
-// AI recommendation provider
+// AI recommendation provider with Advanced Scoring System
 final aiRecommendationsProvider =
     Provider.family<List<Product>, Product>((ref, currentProduct) {
   final productsAsync = ref.watch(productsProvider);
   return productsAsync.when(
     data: (products) {
-      // AI-like recommendation: find products in same category or similar price range
-      final sameCategory = products
-          .where((p) =>
-              p.id != currentProduct.id &&
-              p.category == currentProduct.category)
+      // Advanced AI: Calculate Similarity Score for every item
+      final candidates = products
+          .where((p) => p.id != currentProduct.id)
+          .map((p) {
+            double score = 0.0;
+            
+            // 1. Category Correlation (50%)
+            if (p.category == currentProduct.category) score += 0.50;
+            
+            // 2. Price Segment Proximity (30%)
+            double priceDiff = (p.price - currentProduct.price).abs();
+            double priceScore = (1.0 - (priceDiff / (currentProduct.price.clamp(1, double.infinity) * 0.5))).clamp(0.0, 1.0);
+            score += priceScore * 0.30;
+            
+            // 3. Rating Density (20%)
+            score += (p.rating / 5.0) * 0.20;
+
+            return MapEntry(p, (score * 100).round());
+          })
+          .where((e) => e.value > 65) // Only high confidence matches
           .toList();
 
-      if (sameCategory.length >= 3) return sameCategory.take(5).toList();
-
-      // Fallback: similar price range (±30%)
-      final minPrice = currentProduct.price * 0.7;
-      final maxPrice = currentProduct.price * 1.3;
-      final similarPrice = products
-          .where((p) =>
-              p.id != currentProduct.id &&
-              p.price >= minPrice &&
-              p.price <= maxPrice)
-          .toList();
-
-      final combined = {...sameCategory, ...similarPrice};
-      return combined.take(5).toList();
+      // Rank by AI confidence
+      candidates.sort((a, b) => b.value.compareTo(a.value));
+      
+      return candidates.map((e) => e.key).take(5).toList();
     },
     loading: () => [],
     error: (_, __) => [],
   );
+});
+
+// Provides the individual match score for the UI
+final aiMatchScoreProvider = Provider.family<int, (Product, Product)>((ref, pair) {
+  final current = pair.$1;
+  final other = pair.$2;
+  
+  double score = 0.0;
+  if (other.category == current.category) score += 0.50;
+  double priceDiff = (other.price - current.price).abs();
+  double priceScore = (1.0 - (priceDiff / (current.price.clamp(1, double.infinity) * 0.5))).clamp(0.0, 1.0);
+  score += priceScore * 0.30;
+  score += (other.rating / 5.0) * 0.20;
+  
+  return (score * 100).round();
 });
